@@ -1,14 +1,24 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class ShukiController : MonoBehaviour
 {
     [SerializeField] private float speed;
     [SerializeField] private float turnSpeed;
+    [SerializeField] private float turnSens;
+    [SerializeField] private float speedSens;
     [SerializeField] private float walkAnimSpeedMul;
     [SerializeField] private float turnAnimSpeedMul;
     [SerializeField] private Animator animator;
+    [SerializeField] private NavMeshAgent navMeshAgent;
+    [SerializeField] float angle;
+    [SerializeField] float lookAngleRange;
+    [SerializeField] float lookSpeed;
+    [SerializeField] GameObject neck;
+    [SerializeField] GameObject target;
+
 
     private Vector3 lastPos;
     private float lastRotY;
@@ -17,12 +27,28 @@ public class ShukiController : MonoBehaviour
     {
         lastPos = transform.position;
         lastRotY = transform.rotation.eulerAngles.y;
+        Walk();
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        Movement();
+        LookAtTarget();
     }
+
+    private void LookAtTarget()
+    {
+        Vector3 targetDir = (target.transform.position - transform.position).normalized;
+
+        if (Vector3.Angle(transform.forward, targetDir) <= lookAngleRange)
+        {
+            neck.transform.forward = Vector3.Lerp(neck.transform.forward, targetDir, lookSpeed * Time.deltaTime);
+        }
+        else if (neck.transform.forward != transform.forward)
+        {
+            neck.transform.forward = Vector3.Lerp(neck.transform.forward, transform.forward, lookSpeed * Time.deltaTime);
+        }
+    }
+
 
     [ContextMenu("Walk")]
     public void Walk()
@@ -39,57 +65,29 @@ public class ShukiController : MonoBehaviour
         StopCoroutine(WalkingSpeedSync());
     }
 
-    //private IEnumerator WalkingSpeedSync()
-    //{
-    //    while (true)
-    //    {
-    //        yield return new WaitForFixedUpdate();
-    //        float speed = Vector3.Distance(lastPos, transform.position) * walkAnimSpeedMul;
-    //        float angle = Mathf.Abs(Vector3.Angle((transform.position - lastPos).normalized , transform.forward));
-    //        speed = (angle >= 179 && angle <= 181) ? speed * -1 : speed;
-    //        animator.SetFloat("MoveSpeed", speed);
-    //        animator.SetFloat("Forward", Mathf.Clamp(speed, -1, 1));
-    //        lastPos = transform.position;
-    //    }
-    //}
+
+    float currentRot;
+    float currentSpeed;
+
     private IEnumerator WalkingSpeedSync()
     {
+        currentRot = 0;
         while (true)
         {
             yield return new WaitForFixedUpdate();
-            float speed = Vector3.Distance(lastPos, transform.position) * walkAnimSpeedMul;
+            Vector3 speedVec = new Vector3(navMeshAgent.desiredVelocity.x * transform.forward.x, navMeshAgent.desiredVelocity.y * transform.forward.y, navMeshAgent.desiredVelocity.z * transform.forward.z);
             float rot = (transform.rotation.eulerAngles.y - lastRotY) * turnAnimSpeedMul;
-            //float angle = Mathf.Abs(Vector3.Angle((transform.position - lastPos).normalized , transform.forward));
-            //speed = (angle >= 179 && angle <= 181) ? speed * -1 : speed;
-            animator.SetFloat("MoveSpeed", speed);
-            animator.SetFloat("StrafeSpeed", rot / 2);
-            //animator.SetFloat("Forward", Mathf.Clamp(speed, -1, 1));
+            rot = Mathf.Clamp(rot, -1, 1);
+            float speed = Mathf.Clamp(speedVec.magnitude, -1, 1);
+            currentRot = Mathf.Lerp(currentRot, rot, Time.deltaTime * turnSens);
+            currentSpeed = Mathf.Lerp(currentSpeed, speed, Time.deltaTime * speedSens);
+            animator.SetFloat("MoveSpeed", currentSpeed);
+            animator.SetFloat("StrafeSpeed", currentRot);
             lastPos = transform.position;
             lastRotY = transform.rotation.eulerAngles.y;
         }
     }
 
-    private void Movement()
-    {
-        if (Input.GetKey(KeyCode.W))
-        {
-            Vector3 newPos = transform.position += transform.forward * speed * Time.deltaTime;
-            transform.position = newPos;
-        }
-
-        Vector3 newRot = transform.rotation.eulerAngles;
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            newRot.y -= turnSpeed * Time.deltaTime;
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            newRot.y += turnSpeed * Time.deltaTime;
-        }
-
-        transform.rotation = Quaternion.Euler(newRot);
-    }
+    
 }
 
