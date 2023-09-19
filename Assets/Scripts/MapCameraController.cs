@@ -11,15 +11,15 @@ public class MapCameraController : MonoBehaviour
     [SerializeField] private float zoomStep;
 
     private Vector3 _clickPos;
-    private float _minX, _minY, _maxX, _maxY;
+    private float _minMapX, _minMapY, _maxMapX, _maxMapY;
 
 
     private void Awake()
     {
-        _minX = transform.position.x - mapSprite.bounds.size.x / 2;
-        _minY = transform.position.y - mapSprite.bounds.size.y / 2;
-        _maxX = transform.position.x + mapSprite.bounds.size.x / 2;
-        _maxY = transform.position.y + mapSprite.bounds.size.y / 2;
+        _minMapX = mapSprite.transform.position.x - mapSprite.bounds.size.x / 2;
+        _minMapY = mapSprite.transform.position.y - mapSprite.bounds.size.y / 2;
+        _maxMapX = mapSprite.transform.position.x + mapSprite.bounds.size.x / 2;
+        _maxMapY = mapSprite.transform.position.y + mapSprite.bounds.size.y / 2;
     }
 
 
@@ -27,6 +27,7 @@ public class MapCameraController : MonoBehaviour
     {
         PanCamera();
         Zoom();
+        LimitCamMovement();
     }
 
     private void PanCamera()
@@ -63,8 +64,19 @@ public class MapCameraController : MonoBehaviour
 
     private void LimitCamMovement()
     {
+        float camHeight = mapCamera.orthographicSize;
+        float camWidth = camHeight * mapCamera.aspect;
 
-        mapCamera.transform.position = Mathf.Clamp(mapCamera.transform.position, );
+        float minX = _minMapX + camWidth;
+        float maxX = _maxMapX - camWidth;
+        float minY = _minMapY + camHeight;
+        float maxY = _maxMapY - camHeight;
+
+        Vector3 newCamPos = mapCamera.transform.position;
+        newCamPos.x = Mathf.Clamp(newCamPos.x, minX, maxX);
+        newCamPos.y = Mathf.Clamp(newCamPos.y, minY, maxY);
+
+        mapCamera.transform.position = newCamPos;
     }
 
     private void ZoomIn()
