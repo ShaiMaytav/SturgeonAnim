@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_UseShadowmask: 0
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -346,8 +346,8 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
-  orthographic: 1
+  field of view: 43
+  orthographic: 0
   orthographic size: 2.52
   m_Depth: -1
   m_CullingMask:
@@ -435,19 +435,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1601163283}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9dee0edfacf289a4ba66445a0b85c30e, type: 3}
+  m_Script: {fileID: 11500000, guid: 2cb1571d37a23ef4bb6ce541fb20dbc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mapSprite: {fileID: 1099823453}
   mapCamera: {fileID: 1296404480}
   slideDrag: 0.04
   slideForce: 3
-  minZoom: 0.5
-  maxZoom: 4.9
-  zoomStep: 0.5
+  minZoom: 4
+  maxZoom: 50
+  zoomStep: 3
   moveSpeed: 6
   zoomSmoothSpeed: 2
-  memorySize: 6
+  memorySize: 2
 --- !u!4 &1601163285
 Transform:
   m_ObjectHideFlags: 0
