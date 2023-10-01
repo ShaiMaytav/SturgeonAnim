@@ -1,12 +1,12 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MapCameraController : MonoBehaviour
+public class PerspCamController : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer mapSprite;
     [SerializeField] private Camera mapCamera;
-    [SerializeField] [Range(0,1)] private float slideDrag;
+    [SerializeField][Range(0, 1)] private float slideDrag;
     [SerializeField] private float slideForce;
     [SerializeField] private float minZoom;
     [SerializeField] private float maxZoom;
@@ -32,7 +32,7 @@ public class MapCameraController : MonoBehaviour
         _camTarget = mapCamera.transform.position;
 
         _mPosMemory = new Vector3Memory(memorySize);
-        _zoomTarget = mapCamera.orthographicSize;
+        _zoomTarget = mapCamera.fieldOfView;
     }
 
 
@@ -86,7 +86,7 @@ public class MapCameraController : MonoBehaviour
     private void Smooth()
     {
         mapCamera.transform.position = Vector3.Lerp(mapCamera.transform.position, _camTarget, moveSpeed * Time.deltaTime);
-        mapCamera.orthographicSize = Mathf.Lerp(mapCamera.orthographicSize, _zoomTarget, zoomSmoothSpeed * Time.deltaTime);
+        mapCamera.fieldOfView = Mathf.Lerp(mapCamera.fieldOfView, _zoomTarget, zoomSmoothSpeed * Time.deltaTime);
 
     }
 
@@ -110,7 +110,7 @@ public class MapCameraController : MonoBehaviour
     private void LimitCamMovement()
     {
         //get size of camera
-        float camHeight = mapCamera.orthographicSize;
+        float camHeight = GetCamHeight();
         float camWidth = camHeight * mapCamera.aspect;
 
         //get min/max available values for camera
@@ -150,42 +150,12 @@ public class MapCameraController : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
     }
-}
 
-public struct Vector3Memory
-{
-    public Vector3[] _vectors;
-
-    public Vector3Memory(int memorySize)
+    private float GetCamHeight()
     {
-        memorySize = memorySize < 2 ? 2 : memorySize;
-        _vectors = new Vector3[memorySize];
+        float angle = Mathf.Tan(Mathf.Deg2Rad * (mapCamera.fieldOfView / 2));
+        float adj = Mathf.Abs(mapCamera.transform.position.z - mapSprite.transform.position.z);
+        float opp = angle * adj;
+        return opp;
     }
-
-    public Vector3 GetAverageVector()
-    {
-        Vector3 sumVec = Vector3.zero;
-        foreach (var vec in _vectors)
-        {
-            sumVec += vec;
-        }
-
-        return sumVec / _vectors.Length;
-    }
-
-    public void Add(Vector3 vec)
-    {
-        for (int i = _vectors.Length - 1; i > 0; i--)
-        {
-            _vectors[i] = _vectors[i - 1];
-        }
-        _vectors[0] = vec;
-    }
-
-    public Vector3 GetLatestDelta()
-    {
-        Debug.Log(_vectors[0].ToString() + _vectors[1].ToString());
-        return _vectors[0] - _vectors[1];
-    }
-
 }
