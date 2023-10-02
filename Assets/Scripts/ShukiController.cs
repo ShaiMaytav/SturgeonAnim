@@ -66,6 +66,20 @@ public class ShukiController : MonoBehaviour
     }
 
 
+    [ContextMenu("Attack")]
+    public void Attack()
+    {
+        animator.SetTrigger("Attack");
+        StopCoroutine(WalkingSpeedSync());
+    }
+
+    [ContextMenu("Hit")]
+    public void Hit()
+    {
+        animator.SetTrigger("Hit");
+        StopCoroutine(WalkingSpeedSync());
+    }
+
     float currentRot;
     float currentSpeed;
 
