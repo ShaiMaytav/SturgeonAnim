@@ -2,24 +2,44 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//-make the max zoom relative to the current min max
+//-first clamp to current min max and then clamp to map min max
+//-add icon scaling
+
+
 public class MapCameraController : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private SpriteRenderer mapSprite;
     [SerializeField] private Camera mapCamera;
-    [SerializeField] [Range(0,1)] private float slideDrag;
+
+    [Header("Control")]
+    [SerializeField] [Range(0, 1)] private float slideDrag;
     [SerializeField] private float slideForce;
-    [SerializeField] private float minZoom;
-    [SerializeField] private float maxZoom;
     [SerializeField] private float zoomStep;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float zoomSmoothSpeed;
+    [SerializeField] private float minZoom;
+    [SerializeField] private float maxZoom;
     [SerializeField] private int memorySize;
 
+    [Header("Map Progression")]
+    [SerializeField] private Vector3 startPos;
+    [SerializeField] private float startMinX, startMinY, startMaxX, startMaxY;
+    [Space(10)] [SerializeField] private float startMaxZoom;
+    [SerializeField] private float leftGrowthStep, rightGrowthStep, bottomGrowthStep, topGrowthStep;
+    [SerializeField] private float leftGrowthMultiplier, rightGrowthMultiplier, bottomGrowthMultiplier, topGrowthMultiplier;
+
+    //Control
     private Vector3Memory _mPosMemory;
     private Vector3 _camTarget;
     private Vector3 _clickPos;
     private float _zoomTarget;
     private float _minMapX, _minMapY, _maxMapX, _maxMapY;
+
+    //progression
+    private float _currentMaxZoom;
+    private float currentMinX, currentMinY, currentMaxX, currentMaxY;
 
 
     private void Awake()
@@ -29,9 +49,16 @@ public class MapCameraController : MonoBehaviour
         _minMapY = mapSprite.transform.position.y - mapSprite.bounds.size.y / 2;
         _maxMapX = mapSprite.transform.position.x + mapSprite.bounds.size.x / 2;
         _maxMapY = mapSprite.transform.position.y + mapSprite.bounds.size.y / 2;
-        _camTarget = mapCamera.transform.position;
+
+        Vector3 originPos = mapSprite.transform.position + startPos;
+        mapCamera.transform.position = originPos;
+        currentMaxX = originPos.x + startMaxX;
+        currentMaxY = originPos.y + startMaxY;
+        currentMinX = originPos.x + startMinX;
+        currentMinY = originPos.y + startMinY;
 
         _mPosMemory = new Vector3Memory(memorySize);
+        _camTarget = mapCamera.transform.position;
         _zoomTarget = mapCamera.orthographicSize;
     }
 
@@ -113,11 +140,17 @@ public class MapCameraController : MonoBehaviour
         float camHeight = mapCamera.orthographicSize;
         float camWidth = camHeight * mapCamera.aspect;
 
-        //get min/max available values for camera
-        float minX = _minMapX + camWidth;
-        float maxX = _maxMapX - camWidth;
-        float minY = _minMapY + camHeight;
-        float maxY = _maxMapY - camHeight;
+        ////get min/max available values for camera
+        //float minX = _minMapX + camWidth;
+        //float maxX = _maxMapX - camWidth;
+        //float minY = _minMapY + camHeight;
+        //float maxY = _maxMapY - camHeight;
+
+        //get min/max available values for camera new version
+        float minX = currentMinX + camWidth;
+        float maxX = currentMaxX - camWidth;
+        float minY = currentMinY + camHeight;
+        float maxY = currentMaxY - camHeight;
 
         //clamping
         Vector3 newCamPos = mapCamera.transform.position;
@@ -127,6 +160,44 @@ public class MapCameraController : MonoBehaviour
         _camTarget.y = Mathf.Clamp(newCamPos.y, minY, maxY);
 
         mapCamera.transform.position = newCamPos;
+    }
+
+    private void IncreaseAreaSize()
+    {
+        if (currentMinX > _minMapX)
+        {
+            currentMinX -= leftGrowthStep * leftGrowthMultiplier;
+            currentMinX = currentMinX < _minMapX ? _minMapX : currentMinX;
+        }
+
+        if (currentMaxX < _maxMapX)
+        {
+            currentMaxX += rightGrowthStep * rightGrowthMultiplier;
+            currentMaxX = currentMaxX > _maxMapX ? _maxMapX : currentMaxX;
+        }
+
+        if (currentMinY > _minMapY)
+        {
+            currentMinY -= bottomGrowthStep * bottomGrowthMultiplier;
+            currentMinY = currentMinY < _minMapY ? _minMapY : currentMinY;
+        }
+
+        if (currentMaxY < _maxMapY)
+        {
+            currentMaxY += topGrowthStep * topGrowthMultiplier;
+            currentMaxY = currentMaxY < _maxMapY ? _maxMapY : currentMaxY;
+
+        }
+
+        AdjustMaxZoom();
+    }
+
+    [ContextMenu("AdjustMaxZoom")]
+    private void AdjustMaxZoom()
+    {
+        float currentAreaHeight = (currentMaxY - currentMinY) / 2;
+        float currentAreaWidth = (currentMaxX - currentMinX) / 2 / mapCamera.aspect;//divided by aspect so it will match the camera 
+        maxZoom = currentAreaHeight < currentAreaWidth ? currentAreaHeight : currentAreaWidth;
     }
 
     private void ZoomIn()
@@ -149,6 +220,27 @@ public class MapCameraController : MonoBehaviour
             stepForce -= slideDrag;
             yield return new WaitForEndOfFrame();
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 originPos = mapSprite.transform.position + startPos;
+        currentMaxX = originPos.x + startMaxX;
+        currentMaxY = originPos.y + startMaxY;
+        currentMinX = originPos.x + startMinX;
+        currentMinY = originPos.y + startMinY;
+
+        Vector3 topLeft = new Vector3(currentMinX, currentMaxY);
+        Vector3 topRight = new Vector3(currentMaxX, currentMaxY);
+        Vector3 bottomLeft = new Vector3(currentMinX, currentMinY);
+        Vector3 bottomRight = new Vector3(currentMaxX, currentMinY);
+
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawSphere(originPos, 0.1f);
+        Gizmos.DrawLine(topLeft, topRight);
+        Gizmos.DrawLine(topLeft, bottomLeft);
+        Gizmos.DrawLine(bottomRight, bottomLeft);
+        Gizmos.DrawLine(bottomRight, topRight);
     }
 }
 
@@ -187,5 +279,7 @@ public struct Vector3Memory
         Debug.Log(_vectors[0].ToString() + _vectors[1].ToString());
         return _vectors[0] - _vectors[1];
     }
+
+
 
 }

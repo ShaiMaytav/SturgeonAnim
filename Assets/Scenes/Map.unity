@@ -442,12 +442,26 @@ MonoBehaviour:
   mapCamera: {fileID: 1296404480}
   slideDrag: 0.04
   slideForce: 3
-  minZoom: 0.5
-  maxZoom: 4.9
   zoomStep: 0.5
   moveSpeed: 6
   zoomSmoothSpeed: 2
+  minZoom: 0.5
+  maxZoom: 4.9
   memorySize: 6
+  startPos: {x: -4.4, y: -2.97, z: -10}
+  startMinX: -2
+  startMinY: -2
+  startMaxX: 2
+  startMaxY: 2
+  startMaxZoom: 0
+  leftGrowthStep: 0
+  rightGrowthStep: 0
+  bottomGrowthStep: 0
+  topGrowthStep: 0
+  leftGrowthMultiplier: 0
+  rightGrowthMultiplier: 0
+  bottomGrowthMultiplier: 0
+  topGrowthMultiplier: 0
 --- !u!4 &1601163285
 Transform:
   m_ObjectHideFlags: 0
