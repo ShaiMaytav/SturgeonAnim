@@ -26,9 +26,9 @@ public class MapCameraController : MonoBehaviour
     [Header("Map Progression")]
     [SerializeField] private Vector3 startPos;
     [SerializeField] private float startMinX, startMinY, startMaxX, startMaxY;
-    [Space(10)] [SerializeField] private float startMaxZoom;
-    [SerializeField] private float leftGrowthStep, rightGrowthStep, bottomGrowthStep, topGrowthStep;
-    [SerializeField] private float leftGrowthMultiplier, rightGrowthMultiplier, bottomGrowthMultiplier, topGrowthMultiplier;
+    [Space(20)]
+    [SerializeField] private float leftGrowthStep;
+    [SerializeField] private float rightGrowthStep, bottomGrowthStep, topGrowthStep;
 
     //Control
     private Vector3Memory _mPosMemory;
@@ -38,7 +38,6 @@ public class MapCameraController : MonoBehaviour
     private float _minMapX, _minMapY, _maxMapX, _maxMapY;
 
     //progression
-    private float _currentMaxZoom;
     private float currentMinX, currentMinY, currentMaxX, currentMaxY;
 
 
@@ -60,31 +59,17 @@ public class MapCameraController : MonoBehaviour
         _mPosMemory = new Vector3Memory(memorySize);
         _camTarget = mapCamera.transform.position;
         _zoomTarget = mapCamera.orthographicSize;
+
+        AdjustMaxZoom();
     }
 
 
     private void Update()
     {
-        //PanCamera();
         MoveTarget();
         Smooth();
         Zoom();
         LimitCamMovement();
-    }
-
-    private void PanCamera()
-    {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            _clickPos = mapCamera.ScreenToWorldPoint(Input.mousePosition);
-        }
-
-        if (Input.GetKey(KeyCode.Mouse0))
-        {
-            Vector3 diff = _clickPos - mapCamera.ScreenToWorldPoint(Input.mousePosition);
-
-            mapCamera.transform.position += diff;
-        }
     }
 
     private void MoveTarget() //TBI
@@ -97,7 +82,6 @@ public class MapCameraController : MonoBehaviour
         if (Input.GetKey(KeyCode.Mouse0))
         {
             Vector3 diff = _clickPos - mapCamera.ScreenToWorldPoint(Input.mousePosition);
-            //_mPosMemory.Add(diff);
             _camTarget += diff;
             _mPosMemory.Add(_camTarget);
         }
@@ -140,13 +124,7 @@ public class MapCameraController : MonoBehaviour
         float camHeight = mapCamera.orthographicSize;
         float camWidth = camHeight * mapCamera.aspect;
 
-        ////get min/max available values for camera
-        //float minX = _minMapX + camWidth;
-        //float maxX = _maxMapX - camWidth;
-        //float minY = _minMapY + camHeight;
-        //float maxY = _maxMapY - camHeight;
-
-        //get min/max available values for camera new version
+        //get min/max available values for camera
         float minX = currentMinX + camWidth;
         float maxX = currentMaxX - camWidth;
         float minY = currentMinY + camHeight;
@@ -162,30 +140,61 @@ public class MapCameraController : MonoBehaviour
         mapCamera.transform.position = newCamPos;
     }
 
-    private void IncreaseAreaSize()
+    [ContextMenu("IncreaseArea")]
+    public void IncreaseAreaSize()
     {
         if (currentMinX > _minMapX)
         {
-            currentMinX -= leftGrowthStep * leftGrowthMultiplier;
+            currentMinX -= leftGrowthStep;
             currentMinX = currentMinX < _minMapX ? _minMapX : currentMinX;
         }
 
         if (currentMaxX < _maxMapX)
         {
-            currentMaxX += rightGrowthStep * rightGrowthMultiplier;
+            currentMaxX += rightGrowthStep;
             currentMaxX = currentMaxX > _maxMapX ? _maxMapX : currentMaxX;
         }
 
         if (currentMinY > _minMapY)
         {
-            currentMinY -= bottomGrowthStep * bottomGrowthMultiplier;
+            currentMinY -= bottomGrowthStep;
             currentMinY = currentMinY < _minMapY ? _minMapY : currentMinY;
         }
 
         if (currentMaxY < _maxMapY)
         {
-            currentMaxY += topGrowthStep * topGrowthMultiplier;
-            currentMaxY = currentMaxY < _maxMapY ? _maxMapY : currentMaxY;
+            currentMaxY += topGrowthStep;
+            currentMaxY = currentMaxY > _maxMapY ? _maxMapY : currentMaxY;
+
+        }
+
+        AdjustMaxZoom();
+    }
+
+    public void IncreaseAreaSize(float topStep, float bottomStep, float leftStep, float rightStep)
+    {
+        if (currentMinX > _minMapX)
+        {
+            currentMinX -= leftStep;
+            currentMinX = currentMinX < _minMapX ? _minMapX : currentMinX;
+        }
+
+        if (currentMaxX < _maxMapX)
+        {
+            currentMaxX += rightStep;
+            currentMaxX = currentMaxX > _maxMapX ? _maxMapX : currentMaxX;
+        }
+
+        if (currentMinY > _minMapY)
+        {
+            currentMinY -= bottomStep;
+            currentMinY = currentMinY < _minMapY ? _minMapY : currentMinY;
+        }
+
+        if (currentMaxY < _maxMapY)
+        {
+            currentMaxY += topStep;
+            currentMaxY = currentMaxY > _maxMapY ? _maxMapY : currentMaxY;
 
         }
 
@@ -198,6 +207,12 @@ public class MapCameraController : MonoBehaviour
         float currentAreaHeight = (currentMaxY - currentMinY) / 2;
         float currentAreaWidth = (currentMaxX - currentMinX) / 2 / mapCamera.aspect;//divided by aspect so it will match the camera 
         maxZoom = currentAreaHeight < currentAreaWidth ? currentAreaHeight : currentAreaWidth;
+
+        if (_zoomTarget > maxZoom)
+        {
+            _zoomTarget = maxZoom;
+            mapCamera.orthographicSize = maxZoom;
+        }
     }
 
     private void ZoomIn()
@@ -225,10 +240,14 @@ public class MapCameraController : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Vector3 originPos = mapSprite.transform.position + startPos;
-        currentMaxX = originPos.x + startMaxX;
-        currentMaxY = originPos.y + startMaxY;
-        currentMinX = originPos.x + startMinX;
-        currentMinY = originPos.y + startMinY;
+
+        if (!Application.isPlaying)
+        {
+            currentMaxX = originPos.x + startMaxX;
+            currentMaxY = originPos.y + startMaxY;
+            currentMinX = originPos.x + startMinX;
+            currentMinY = originPos.y + startMinY;
+        }
 
         Vector3 topLeft = new Vector3(currentMinX, currentMaxY);
         Vector3 topRight = new Vector3(currentMaxX, currentMaxY);

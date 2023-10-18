@@ -453,15 +453,10 @@ MonoBehaviour:
   startMinY: -2
   startMaxX: 2
   startMaxY: 2
-  startMaxZoom: 0
-  leftGrowthStep: 0
-  rightGrowthStep: 0
-  bottomGrowthStep: 0
-  topGrowthStep: 0
-  leftGrowthMultiplier: 0
-  rightGrowthMultiplier: 0
-  bottomGrowthMultiplier: 0
-  topGrowthMultiplier: 0
+  leftGrowthStep: 1
+  rightGrowthStep: 80
+  bottomGrowthStep: 1
+  topGrowthStep: 1
 --- !u!4 &1601163285
 Transform:
   m_ObjectHideFlags: 0
