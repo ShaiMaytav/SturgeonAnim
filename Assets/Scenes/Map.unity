@@ -454,7 +454,7 @@ MonoBehaviour:
   startMaxX: 2
   startMaxY: 2
   leftGrowthStep: 1
-  rightGrowthStep: 80
+  rightGrowthStep: 1
   bottomGrowthStep: 1
   topGrowthStep: 1
 --- !u!4 &1601163285

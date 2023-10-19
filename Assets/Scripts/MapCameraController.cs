@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 //-make the max zoom relative to the current min max
 //-first clamp to current min max and then clamp to map min max
@@ -10,15 +11,15 @@ using UnityEngine;
 public class MapCameraController : MonoBehaviour
 {
     [Header("References")]
+    public Camera mapCamera;
     [SerializeField] private SpriteRenderer mapSprite;
-    [SerializeField] private Camera mapCamera;
 
     [Header("Control")]
     [SerializeField] [Range(0, 1)] private float slideDrag;
     [SerializeField] private float slideForce;
     [SerializeField] private float zoomStep;
     [SerializeField] private float moveSpeed;
-    [SerializeField] private float zoomSmoothSpeed;
+    public float zoomSmoothSpeed; //idealy this should be private
     [SerializeField] private float minZoom;
     [SerializeField] private float maxZoom;
     [SerializeField] private int memorySize;
@@ -30,11 +31,14 @@ public class MapCameraController : MonoBehaviour
     [SerializeField] private float leftGrowthStep;
     [SerializeField] private float rightGrowthStep, bottomGrowthStep, topGrowthStep;
 
+
+    [HideInInspector] public UnityEvent OnZoomChanged;
+
     //Control
+    public float _zoomTarget;//idealy this should be private
     private Vector3Memory _mPosMemory;
     private Vector3 _camTarget;
     private Vector3 _clickPos;
-    private float _zoomTarget;
     private float _minMapX, _minMapY, _maxMapX, _maxMapY;
 
     //progression
@@ -108,13 +112,13 @@ public class MapCameraController : MonoBehaviour
         if (scroll < 0)
         {
             ZoomOut();
+            OnZoomChanged.Invoke();
         }
         else if (scroll > 0)
         {
             ZoomIn();
+            OnZoomChanged.Invoke();
         }
-
-        _zoomTarget = Mathf.Clamp(_zoomTarget, minZoom, maxZoom);
 
     }
 
@@ -218,11 +222,14 @@ public class MapCameraController : MonoBehaviour
     private void ZoomIn()
     {
         _zoomTarget -= zoomStep;
+        _zoomTarget = Mathf.Clamp(_zoomTarget, minZoom, maxZoom);
+
     }
 
     private void ZoomOut()
     {
         _zoomTarget += zoomStep;
+        _zoomTarget = Mathf.Clamp(_zoomTarget, minZoom, maxZoom);
     }
 
     private IEnumerator CameraSlide()
