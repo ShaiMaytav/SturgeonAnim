@@ -19,7 +19,7 @@ public class MapCameraController : MonoBehaviour
     [SerializeField] private float slideForce;
     [SerializeField] private float zoomStep;
     [SerializeField] private float moveSpeed;
-    public float zoomSmoothSpeed; //idealy this should be private
+    [SerializeField] private float zoomSmoothSpeed; 
     [SerializeField] private float minZoom;
     [SerializeField] private float maxZoom;
     [SerializeField] private int memorySize;
@@ -32,10 +32,10 @@ public class MapCameraController : MonoBehaviour
     [SerializeField] private float rightGrowthStep, bottomGrowthStep, topGrowthStep;
 
 
-    [HideInInspector] public UnityEvent OnZoomChanged;
+    [HideInInspector] public UnityEvent<float, float> OnZoomChanged;
 
     //Control
-    public float _zoomTarget;//idealy this should be private
+    private float _zoomTarget;
     private Vector3Memory _mPosMemory;
     private Vector3 _camTarget;
     private Vector3 _clickPos;
@@ -67,6 +67,10 @@ public class MapCameraController : MonoBehaviour
         AdjustMaxZoom();
     }
 
+    private void Start()
+    {
+        OnZoomChanged.Invoke(_zoomTarget, zoomSmoothSpeed);
+    }
 
     private void Update()
     {
@@ -112,12 +116,12 @@ public class MapCameraController : MonoBehaviour
         if (scroll < 0)
         {
             ZoomOut();
-            OnZoomChanged.Invoke();
+            OnZoomChanged.Invoke(_zoomTarget, zoomSmoothSpeed);
         }
         else if (scroll > 0)
         {
             ZoomIn();
-            OnZoomChanged.Invoke();
+            OnZoomChanged.Invoke(_zoomTarget, zoomSmoothSpeed);
         }
 
     }

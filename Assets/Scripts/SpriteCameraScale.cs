@@ -7,6 +7,7 @@ public class SpriteCameraScale : MonoBehaviour
     [SerializeField] private MapCameraController mapController;
     [SerializeField] private float scaleMultiplier;
 
+    private float _scaleSpeed;
     private Vector3 _originScale;
     private Vector3 _scaleTarget;
     private void Awake()
@@ -17,7 +18,6 @@ public class SpriteCameraScale : MonoBehaviour
 
     private void Start()
     {
-        ChangeScaleTarget();
         transform.localScale = _scaleTarget;
     }
     private void Update()
@@ -25,13 +25,17 @@ public class SpriteCameraScale : MonoBehaviour
         AdjustScale();
     }
 
-    private void ChangeScaleTarget()
+    private void ChangeScaleTarget(float zoomTarget, float scaleSpeed)
     {
-        _scaleTarget = _originScale * mapController._zoomTarget * scaleMultiplier;
+        _scaleTarget = _originScale * zoomTarget * scaleMultiplier;
+        _scaleSpeed = scaleSpeed;
     }
 
     private void AdjustScale()
     {
-        transform.localScale = Vector3.Lerp(transform.localScale, _scaleTarget, mapController.zoomSmoothSpeed * Time.deltaTime);
+        if (transform.localScale != _scaleTarget)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, _scaleTarget, _scaleSpeed * Time.deltaTime);
+        }
     }
 }
